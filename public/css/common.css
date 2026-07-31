@@ -66,6 +66,14 @@ hr {
     border-top: solid 2px #eee;
 }
 
+.row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    margin: 0 0 16px 0;
+}
+
 .container {
     display: flex;
     flex-direction: row;
@@ -103,7 +111,7 @@ hr {
     top: 0px;
     left: 56px;
     width: 25%;
-    max-width: 256px;
+    max-width: 512px;
     height: 100%;
 
     display: none;

@@ -18,3 +18,21 @@ button:hover {
 button:active {
     filter: brightness(90%);
 }
+
+label {
+    display: flex;
+    flex-basis: 50%;
+}
+
+input {
+    width: 100%;
+    padding: 4px;
+    border: solid 1px var(--green);
+    background-color: #eee;
+    border-radius: 8px;
+    color: #222;
+}
+
+input:focus {
+    outline: solid 2px var(--dark-green);
+}

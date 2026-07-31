@@ -12,13 +12,14 @@ export class Game {
 
     private static _frameWidth: number;
     private static _frameHeight: number;
+    private static _scale: number;
+
     private static _viewX: number;
     private static _viewY: number;
     private static _cursorX: number;
     private static _cursorY: number;
     private static _cursorPrevX: number;
     private static _cursorPrevY: number;
-    private static _scale: number;
 
     public static async init() {
         this._frameWidth = 16;
@@ -85,11 +86,77 @@ export class Game {
 
     private static async updateInput() {
         const elScale = document.querySelector("#input-scale") as HTMLInputElement;
+        const elFrameWidth = document.querySelector("#input-frame-width") as HTMLInputElement;
+        const elFrameHeight = document.querySelector("#input-frame-height") as HTMLInputElement;
 
         if (elScale) {
-            this._scale = parseInt(elScale.value);
+            const value = parseInt(elScale.value);
+            const min = parseInt(elScale.min);
+            const max = parseInt(elScale.max);
+
+            if (!elScale.value) {
+                elScale.value = min.toString();
+                return;
+            }
+
+            if (value < 1) {
+                elScale.value = min.toString();
+                return;
+            }
+
+            if (value > 10) {
+                elScale.value = max.toString();
+                return;
+            }
+
+            this._scale = value;
         }
 
+        if (elFrameWidth) {
+            const value = parseInt(elFrameWidth.value);
+            const min = parseInt(elFrameWidth.min);
+            const max = parseInt(elFrameWidth.max);
+
+            if (!elFrameWidth.value) {
+                elFrameWidth.value = min.toString();
+                return;
+            }
+
+            if (value < min) {
+                elFrameWidth.value = min.toString();
+                return;
+            }
+
+            if (value > max) {
+                elFrameWidth.value = max.toString();
+                return;
+            }
+
+            this._frameWidth = value;
+        }
+
+        if (elFrameHeight) {
+            const value = parseInt(elFrameHeight.value);
+            const min = parseInt(elFrameHeight.min);
+            const max = parseInt(elFrameHeight.max);
+
+            if (!elFrameHeight.value) {
+                elFrameHeight.value = min.toString();
+                return;
+            }
+
+            if (value < min) {
+                elFrameHeight.value = min.toString();
+                return;
+            }
+
+            if (value > max) {
+                elFrameHeight.value = max.toString();
+                return;
+            }
+
+            this._frameHeight = value;
+        }
     }
 
     private static async updateCursor() {
@@ -99,11 +166,25 @@ export class Game {
         this._cursorY = Cursor.y;
 
         if (Cursor.wheelY > 0 && this._scale > 1) {
-            this._scale--;
+            const elScale = document.querySelector("#input-scale") as HTMLInputElement;
+
+            if (elScale) {
+                let value = parseInt(elScale.value);
+                value--;
+
+                elScale.value = value.toString();
+            }
         }
 
         if (Cursor.wheelY < 0 && this._scale < 10) {
-            this._scale++;
+            const elScale = document.querySelector("#input-scale") as HTMLInputElement;
+
+            if (elScale) {
+                let value = parseInt(elScale.value);
+                value++;
+
+                elScale.value = value.toString();
+            }
         }
 
         if (Cursor.isButtonDown(1)) {
