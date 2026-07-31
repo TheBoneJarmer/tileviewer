@@ -12,11 +12,23 @@ export class Game {
 
     private static _frameWidth: number;
     private static _frameHeight: number;
+    private static _viewX: number;
+    private static _viewY: number;
+    private static _cursorX: number;
+    private static _cursorY: number;
+    private static _cursorPrevX: number;
+    private static _cursorPrevY: number;
     private static _scale: number;
 
     public static async init() {
         this._frameWidth = 16;
         this._frameHeight = 16;
+        this._viewX = 0;
+        this._viewY = 0;
+        this._cursorX = 0;
+        this._cursorPrevX = 0;
+        this._cursorY = 0;
+        this._cursorPrevY = 0;
         this._scale = 1;
 
         await this.initEvents();
@@ -68,6 +80,7 @@ export class Game {
 
     public static async update() {
         await this.updateInput();
+        await this.updateCursor();
     }
 
     private static async updateInput() {
@@ -77,12 +90,33 @@ export class Game {
             this._scale = parseInt(elScale.value);
         }
 
+    }
+
+    private static async updateCursor() {
+        this._cursorPrevX = this._cursorX;
+        this._cursorPrevY = this._cursorY;
+        this._cursorX = Cursor.x;
+        this._cursorY = Cursor.y;
+
         if (Cursor.wheelY > 0 && this._scale > 1) {
             this._scale--;
         }
 
         if (Cursor.wheelY < 0 && this._scale < 10) {
             this._scale++;
+        }
+
+        if (Cursor.isButtonDown(1)) {
+            const moveX = this._cursorX - this._cursorPrevX;
+            const moveY = this._cursorY - this._cursorPrevY;
+
+            this._viewX -= moveX;
+            this._viewY -= moveY;
+        }
+
+        if (Cursor.isButtonPressed(2)) {
+            this._viewX = 0;
+            this._viewY = 0;
         }
     }
 
@@ -97,7 +131,7 @@ export class Game {
             return;
         }
 
-        const pos = new Vector2(0, 0);
+        const pos = new Vector2(-this._viewX, -this._viewY);
         const scale = new Vector2(this._scale, this._scale);
         const color = new Color(255, 255, 255, 255);
         const origin = new Vector2(0, 0);
@@ -134,8 +168,6 @@ export class Game {
             return;
         }
 
-        const pos = new Vector2(0, 0);
-        const scale = new Vector2(1, 1);
         const origin = new Vector2(0, 0);
         const color = new Color(0, 0, 0, 255);
 
@@ -145,19 +177,21 @@ export class Game {
         const maxVert = this._texTileset.height / vert + 1;
 
         for (let x = 0; x < maxHor; x++) {
-            pos.x = x * this._scale * hor;
-            pos.y = 0;
-            scale.x = 1;
+            const pos = new Vector2(-this._viewX, -this._viewY);
+            pos.x += x * this._scale * hor;
+
+            const scale = new Vector2(1, 1);
             scale.y = this._texTileset.height * this._scale;
 
             Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
         }
 
         for (let y = 0; y < maxVert; y++) {
-            pos.x = 0;
-            pos.y = y * this._scale * vert;
+            const pos = new Vector2(-this._viewX, -this._viewY);
+            pos.y += y * this._scale * vert;
+
+            const scale = new Vector2(1, 1);
             scale.x = this._texTileset.width * this._scale;
-            scale.y = 1;
 
             Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
         }
@@ -194,6 +228,9 @@ export class Game {
             img.onload = async () => {
                 this._texTileset = new Texture(img.width, img.height, img);
                 this._polyTileset = Polygon.rectangle(img.width, img.height);
+
+                this._viewX = 0;
+                this._viewY = 0;
             };
         });
     }
