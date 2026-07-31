@@ -1,0 +1,23 @@
+{
+  "name": "tileviewer",
+  "version": "1.0.0",
+  "description": "A very basic tileset viewer",
+  "homepage": "https://github.com/TheBoneJarmer/tileviewer#readme",
+  "bugs": {
+    "url": "https://github.com/TheBoneJarmer/tileviewer/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheBoneJarmer/tileviewer.git"
+  },
+  "license": "ISC",
+  "author": "Ruben Labruyere",
+  "type": "module",
+  "dependencies": {
+    "aquanore": "^3.6.4",
+    "lucide": "^1.27.0"
+  },
+  "devDependencies": {
+    "vite": "^8.1.5"
+  }
+}

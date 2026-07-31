@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Tileviewer</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Ruben Labruyere" />
+    <meta name="description" content="A very basic tileviewer" />
+    <meta name="keywords" content="tile,viewer,aquanore" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="css/vars.css" />
+    <link rel="stylesheet" type="text/css" href="css/common.css" />
+    <link rel="stylesheet" type="text/css" href="css/forms.css" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="nav">
+            <span class="link" onclick="toggleNavPanel('load')">
+                <i data-lucide="folder-open"></i>
+            </span>
+
+            <span class="link" onclick="toggleNavPanel('settings')">
+                <i data-lucide="settings"></i>
+            </span>
+        </div>
+
+        <div class="panel" id="load">
+            <button id="btn-load-disk">Load from disk</button>
+        </div>
+
+        <div class="panel" id="settings">
+
+        </div>
+
+        <div class="game">
+            <canvas></canvas>
+        </div>
+
+        <div class="info">
+
+        </div>
+    </div>
+
+    <script src="./src/app.ts" type="module"></script>
+    <script src="./src/lucide.js" type="module"></script>
+    <script src="./src/ui.js"></script>
+</body>
+</head>
