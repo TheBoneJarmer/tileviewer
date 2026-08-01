@@ -31,7 +31,10 @@ h2,
 h3,
 h4,
 h5 {
-    margin: 0 0 16px 0;
+    color: var(--green);
+    margin: 0 0 12px 0;
+    padding: 0 0 4px 0;
+    border-bottom: solid 2px var(--green);
 }
 
 h1 {
@@ -74,10 +77,21 @@ hr {
     margin: 0 0 16px 0;
 }
 
+.col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+}
+
 .container {
     display: flex;
     flex-direction: row;
     flex: 1;
+}
+
+.label {
+    text-align: right;
 }
 
 .nav {
@@ -131,6 +145,8 @@ hr {
 .info {
     display: flex;
     flex-basis: 20%;
+    flex-direction: column;
+    padding: 16px;
     min-width: 256px;
     border-left: solid 1px #000;
     background-color: #111;

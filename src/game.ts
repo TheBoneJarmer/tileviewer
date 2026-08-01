@@ -37,6 +37,7 @@ export class Game {
         await this.initPixel();
 
         await this.resize();
+        await this.load();
     }
 
     private static async initBackground() {
@@ -80,8 +81,36 @@ export class Game {
     }
 
     public static async update() {
+        await this.updateInfo();
         await this.updateInput();
         await this.updateCursor();
+    }
+
+    private static async updateInfo() {
+        const elWidth = document.querySelector("#label-width") as HTMLSpanElement;
+        const elHeight = document.querySelector("#label-height") as HTMLSpanElement;
+        const elFramesHor = document.querySelector("#label-frames-hor") as HTMLSpanElement;
+        const elFramesVert = document.querySelector("#label-frames-vert") as HTMLSpanElement;
+
+        if (!this._texTileset) {
+            return;
+        }
+
+        if (elWidth) {
+            elWidth.innerHTML = `${this._texTileset.width}px`;
+        }
+
+        if (elHeight) {
+            elHeight.innerHTML = `${this._texTileset.height}px`;
+        }
+
+        if (elFramesHor) {
+            elFramesHor.innerHTML = `${Math.round(this._texTileset.width / this._frameWidth)}`;
+        }
+
+        if (elFramesVert) {
+            elFramesVert.innerHTML = `${Math.round(this._texTileset.height / this._frameHeight)}`;
+        }
     }
 
     private static async updateInput() {
@@ -95,7 +124,6 @@ export class Game {
             const max = parseInt(elScale.max);
 
             if (!elScale.value) {
-                elScale.value = min.toString();
                 return;
             }
 
@@ -118,7 +146,6 @@ export class Game {
             const max = parseInt(elFrameWidth.max);
 
             if (!elFrameWidth.value) {
-                elFrameWidth.value = min.toString();
                 return;
             }
 
@@ -141,7 +168,6 @@ export class Game {
             const max = parseInt(elFrameHeight.max);
 
             if (!elFrameHeight.value) {
-                elFrameHeight.value = min.toString();
                 return;
             }
 
@@ -286,6 +312,23 @@ export class Game {
         cnv.height = parent.clientHeight;
     }
 
+    private static async load() {
+        const url = localStorage.getItem("tile-img-data");
+        const width = localStorage.getItem("tile-img-width");
+        const height = localStorage.getItem("tile-img-height");
+
+        if (!url || !width || !height) {
+            return;
+        }
+
+        const img = new Image();
+        img.src = url;
+        img.onload = () => {
+            this._texTileset = new Texture(img.width, img.height, img);
+            this._polyTileset = Polygon.rectangle(img.width, img.height);
+        }
+    }
+
     /* EVENTS */
     private static async onLoadDisk() {
         const el = document.createElement("input");
@@ -293,7 +336,7 @@ export class Game {
         el.accept = "image/*";
         el.click();
 
-        el.addEventListener("change", () => {
+        el.addEventListener("change", async () => {
             const panel = document.querySelector("#load") as HTMLDivElement;
 
             if (panel) {
@@ -304,15 +347,42 @@ export class Game {
                 return;
             }
 
-            const img = new Image();
-            img.src = URL.createObjectURL(el.files[0]);
-            img.onload = async () => {
-                this._texTileset = new Texture(img.width, img.height, img);
-                this._polyTileset = Polygon.rectangle(img.width, img.height);
+            const reader = new FileReader();
+            reader.onload = () => {
+                const url = reader.result as string;
 
-                this._viewX = 0;
-                this._viewY = 0;
+                const img = new Image();
+                img.src = url;
+                img.onload = () => {
+                    this._texTileset = new Texture(img.width, img.height, img);
+                    this._polyTileset = Polygon.rectangle(img.width, img.height);
+
+                    localStorage.setItem("tile-img-data", url);
+                    localStorage.setItem("tile-img-width", img.width.toString());
+                    localStorage.setItem("tile-img-height", img.height.toString());
+                }
             };
+
+            reader.onerror = () => {
+                console.error(`Failed to read image file`);
+            };
+
+            reader.readAsDataURL(el.files[0]);
+
+            // const url = URL.createObjectURL(el.files[0]);
+            // const img = new Image();
+            // img.src = url;
+            // img.onload = async () => {
+            //     this._texTileset = new Texture(img.width, img.height, img);
+            //     this._polyTileset = Polygon.rectangle(img.width, img.height);
+
+            //     this._viewX = 0;
+            //     this._viewY = 0;
+
+            //     localStorage.setItem("tile-img-data", btoa(url));
+            //     localStorage.setItem("tile-img-width", img.width.toString());
+            //     localStorage.setItem("tile-img-height", img.height.toString());
+            // };
         });
     }
 }
