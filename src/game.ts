@@ -1,7 +1,9 @@
 import { Aquanore } from "aquanore";
-import { Color, Polygon, Renderer, Sprite, Texture } from "aquanore/graphics";
+import { Color, Polygon, Renderer, Texture } from "aquanore/graphics";
 import { Vector2 } from "aquanore/math";
 import { Cursor, Keyboard } from "aquanore/input";
+import { Keys } from "aquanore/enums";
+import { Key } from "lucide";
 
 export class Game {
     private static _texTileset: Texture;
@@ -20,6 +22,8 @@ export class Game {
     private static _cursorY: number;
     private static _cursorPrevX: number;
     private static _cursorPrevY: number;
+    private static _tileX: number;
+    private static _tileY: number;
 
     public static async init() {
         this._frameWidth = 16;
@@ -30,6 +34,8 @@ export class Game {
         this._cursorPrevX = 0;
         this._cursorY = 0;
         this._cursorPrevY = 0;
+        this._tileX = 0;
+        this._tileY = 0;
         this._scale = 1;
 
         await this.initEvents();
@@ -83,7 +89,25 @@ export class Game {
     public static async update() {
         await this.updateInfo();
         await this.updateInput();
-        await this.updateCursor();
+        await this.updateControls();
+        await this.updateSelection();
+    }
+
+    private static async updateSelection() {
+        if (!this._texTileset) {
+            return;
+        }
+
+        const maxHor = Math.floor(this._texTileset.width / this._frameWidth);
+        const maxVert = Math.floor(this._texTileset.height / this._frameHeight);
+
+        const tileX = Math.floor((Cursor.x + this._viewX) / this._scale / this._frameWidth);
+        const tileY = Math.floor((Cursor.y + this._viewY) / this._scale / this._frameHeight);
+
+        if (Cursor.isButtonPressed(0) && tileX >= 0 && tileY >= 0 && tileX < maxHor && tileY < maxVert) {
+            this._tileX = tileX;
+            this._tileY = tileY;
+        }
     }
 
     private static async updateInfo() {
@@ -91,6 +115,9 @@ export class Game {
         const elHeight = document.querySelector("#label-height") as HTMLSpanElement;
         const elFramesHor = document.querySelector("#label-frames-hor") as HTMLSpanElement;
         const elFramesVert = document.querySelector("#label-frames-vert") as HTMLSpanElement;
+        const elTileX = document.querySelector("#label-tile-x") as HTMLSpanElement;
+        const elTileY = document.querySelector("#label-tile-y") as HTMLSpanElement;
+        const elTileIndex = document.querySelector("#label-tile-index") as HTMLSpanElement;
 
         if (!this._texTileset) {
             return;
@@ -110,6 +137,21 @@ export class Game {
 
         if (elFramesVert) {
             elFramesVert.innerHTML = `${Math.round(this._texTileset.height / this._frameHeight)}`;
+        }
+
+        if (elTileX) {
+            elTileX.innerHTML = this._tileX.toString();
+        }
+
+        if (elTileY) {
+            elTileY.innerHTML = this._tileY.toString();
+        }
+
+        if (elTileIndex) {
+            const maxHor = this._texTileset.width / this._frameWidth;
+            const maxVert = this._texTileset.height / this._frameHeight;
+
+            elTileIndex.innerHTML = (maxHor * this._tileY + this._tileX).toString();
         }
     }
 
@@ -138,6 +180,7 @@ export class Game {
             }
 
             this._scale = value;
+            localStorage.setItem("tile-scale", elScale.value);
         }
 
         if (elFrameWidth) {
@@ -185,7 +228,7 @@ export class Game {
         }
     }
 
-    private static async updateCursor() {
+    private static async updateControls() {
         this._cursorPrevX = this._cursorX;
         this._cursorPrevY = this._cursorY;
         this._cursorX = Cursor.x;
@@ -213,6 +256,10 @@ export class Game {
             }
         }
 
+        if (Cursor.isButtonPressed(0) || Keyboard.keyPressed(Keys.Escape)) {
+            hideAllPanels();
+        }
+
         if (Cursor.isButtonDown(1)) {
             const moveX = this._cursorX - this._cursorPrevX;
             const moveY = this._cursorY - this._cursorPrevY;
@@ -231,6 +278,7 @@ export class Game {
         await this.renderBackground();
         await this.renderSprite();
         await this.renderGrid();
+        await this.renderSelection();
     }
 
     private static async renderSprite() {
@@ -304,6 +352,54 @@ export class Game {
         }
     }
 
+    private static async renderSelection() {
+        if (!this._polyPixel || !this._texTileset) {
+            return;
+        }
+
+        const pos = new Vector2(0, 0);
+        const scale = new Vector2(this._scale, this._scale);
+        const origin = new Vector2(0, 0);
+        const color = new Color(255, 0, 255);
+
+        const x = this._tileX * this._frameWidth * this._scale - this._viewX;
+        const y = this._tileY * this._frameHeight * this._scale - this._viewY;
+        const width = this._frameWidth * this._scale;
+        const height = this._frameHeight * this._scale;
+
+        // Draw top line
+        pos.x = x;
+        pos.y = y;
+        scale.x = width;
+        scale.y = this._scale;
+
+        Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
+
+        // Draw right line
+        pos.x = x + width - this._scale;
+        pos.y = y;
+        scale.x = this._scale;
+        scale.y = height;
+
+        Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
+
+        // Draw bottom line
+        pos.x = x;
+        pos.y = y + height - this._scale;
+        scale.x = width;
+        scale.y = this._scale;
+
+        Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
+
+        // Draw left line
+        pos.x = x;
+        pos.y = y;
+        scale.x = this._scale;
+        scale.y = height;
+
+        Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
+    }
+
     public static async resize() {
         const parent = document.querySelector(".game") as HTMLDivElement;
         const cnv = Aquanore.canvas;
@@ -313,19 +409,25 @@ export class Game {
     }
 
     private static async load() {
-        const url = localStorage.getItem("tile-img-data");
-        const width = localStorage.getItem("tile-img-width");
-        const height = localStorage.getItem("tile-img-height");
+        const url = localStorage.getItem("tile-url");
+        const scale = localStorage.getItem("tile-scale");
 
-        if (!url || !width || !height) {
-            return;
+        if (url) {
+            const img = new Image();
+
+            img.src = url;
+            img.onload = () => {
+                this._texTileset = new Texture(img.width, img.height, img);
+                this._polyTileset = Polygon.rectangle(img.width, img.height);
+            }
         }
 
-        const img = new Image();
-        img.src = url;
-        img.onload = () => {
-            this._texTileset = new Texture(img.width, img.height, img);
-            this._polyTileset = Polygon.rectangle(img.width, img.height);
+        if (scale) {
+            const elScale = document.querySelector("#input-scale") as HTMLInputElement;
+
+            if (elScale) {
+                elScale.value = scale;
+            }
         }
     }
 
@@ -357,9 +459,7 @@ export class Game {
                     this._texTileset = new Texture(img.width, img.height, img);
                     this._polyTileset = Polygon.rectangle(img.width, img.height);
 
-                    localStorage.setItem("tile-img-data", url);
-                    localStorage.setItem("tile-img-width", img.width.toString());
-                    localStorage.setItem("tile-img-height", img.height.toString());
+                    localStorage.setItem("tile-url", url);
                 }
             };
 
@@ -368,21 +468,6 @@ export class Game {
             };
 
             reader.readAsDataURL(el.files[0]);
-
-            // const url = URL.createObjectURL(el.files[0]);
-            // const img = new Image();
-            // img.src = url;
-            // img.onload = async () => {
-            //     this._texTileset = new Texture(img.width, img.height, img);
-            //     this._polyTileset = Polygon.rectangle(img.width, img.height);
-
-            //     this._viewX = 0;
-            //     this._viewY = 0;
-
-            //     localStorage.setItem("tile-img-data", btoa(url));
-            //     localStorage.setItem("tile-img-width", img.width.toString());
-            //     localStorage.setItem("tile-img-height", img.height.toString());
-            // };
         });
     }
 }

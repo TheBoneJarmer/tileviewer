@@ -6,6 +6,8 @@
     font-family: Coolvetica;
     font-size: 20px;
     color: #eee;
+
+    user-select: none;
 }
 
 html,
