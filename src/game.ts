@@ -15,6 +15,8 @@ export class Game {
     private static _frameWidth: number;
     private static _frameHeight: number;
     private static _scale: number;
+    private static _spacing: number;
+    private static _padding: number;
 
     private static _viewX: number;
     private static _viewY: number;
@@ -80,10 +82,20 @@ export class Game {
 
     private static async initEvents() {
         const btnLoadDisk = document.querySelector("#btn-load-disk") as HTMLButtonElement;
+        const linkLoad = document.querySelector("#link-load") as HTMLSpanElement;
+        const linkSettings = document.querySelector("#link-settings") as HTMLSpanElement;
 
-        btnLoadDisk.onclick = async () => {
+        btnLoadDisk.addEventListener("click", async () => {
             await this.onLoadDisk();
-        }
+        });
+
+        linkLoad.addEventListener("click", async () => {
+            await this.togglePanel("load");
+        });
+
+        linkSettings.addEventListener("click", async () => {
+            await this.togglePanel("settings");
+        });
     }
 
     public static async update() {
@@ -111,121 +123,30 @@ export class Game {
     }
 
     private static async updateInfo() {
-        const elWidth = document.querySelector("#label-width") as HTMLSpanElement;
-        const elHeight = document.querySelector("#label-height") as HTMLSpanElement;
-        const elFramesHor = document.querySelector("#label-frames-hor") as HTMLSpanElement;
-        const elFramesVert = document.querySelector("#label-frames-vert") as HTMLSpanElement;
-        const elTileX = document.querySelector("#label-tile-x") as HTMLSpanElement;
-        const elTileY = document.querySelector("#label-tile-y") as HTMLSpanElement;
-        const elTileIndex = document.querySelector("#label-tile-index") as HTMLSpanElement;
-
         if (!this._texTileset) {
             return;
         }
 
-        if (elWidth) {
-            elWidth.innerHTML = `${this._texTileset.width}px`;
-        }
+        const maxHor = this._texTileset.width / this._frameWidth;
+        const maxVert = this._texTileset.height / this._frameHeight;
 
-        if (elHeight) {
-            elHeight.innerHTML = `${this._texTileset.height}px`;
-        }
-
-        if (elFramesHor) {
-            elFramesHor.innerHTML = `${Math.round(this._texTileset.width / this._frameWidth)}`;
-        }
-
-        if (elFramesVert) {
-            elFramesVert.innerHTML = `${Math.round(this._texTileset.height / this._frameHeight)}`;
-        }
-
-        if (elTileX) {
-            elTileX.innerHTML = this._tileX.toString();
-        }
-
-        if (elTileY) {
-            elTileY.innerHTML = this._tileY.toString();
-        }
-
-        if (elTileIndex) {
-            const maxHor = this._texTileset.width / this._frameWidth;
-            const maxVert = this._texTileset.height / this._frameHeight;
-
-            elTileIndex.innerHTML = (maxHor * this._tileY + this._tileX).toString();
-        }
+        await this.setLabelValue("width", this._texTileset.width, "px");
+        await this.setLabelValue("height", this._texTileset.height, "px");
+        await this.setLabelValue("frames-hor", Math.round(this._texTileset.width / this._frameWidth));
+        await this.setLabelValue("frames-vert", Math.round(this._texTileset.height / this._frameHeight));
+        await this.setLabelValue("tile-x", this._tileX);
+        await this.setLabelValue("tile-y", this._tileY);
+        await this.setLabelValue("tile-index", maxHor * this._tileY + this._tileX);
     }
 
     private static async updateInput() {
-        const elScale = document.querySelector("#input-scale") as HTMLInputElement;
-        const elFrameWidth = document.querySelector("#input-frame-width") as HTMLInputElement;
-        const elFrameHeight = document.querySelector("#input-frame-height") as HTMLInputElement;
+        this._scale = await this.getNumberValue("scale", 0);
+        this._frameWidth = await this.getNumberValue("frame-width", 16);
+        this._frameHeight = await this.getNumberValue("frame-height", 16);
+        this._padding = await this.getNumberValue("padding", 0);
+        this._spacing = await this.getNumberValue("spacing", 0);
 
-        if (elScale) {
-            const value = parseInt(elScale.value);
-            const min = parseInt(elScale.min);
-            const max = parseInt(elScale.max);
-
-            if (!elScale.value) {
-                return;
-            }
-
-            if (value < 1) {
-                elScale.value = min.toString();
-                return;
-            }
-
-            if (value > 10) {
-                elScale.value = max.toString();
-                return;
-            }
-
-            this._scale = value;
-            localStorage.setItem("tile-scale", elScale.value);
-        }
-
-        if (elFrameWidth) {
-            const value = parseInt(elFrameWidth.value);
-            const min = parseInt(elFrameWidth.min);
-            const max = parseInt(elFrameWidth.max);
-
-            if (!elFrameWidth.value) {
-                return;
-            }
-
-            if (value < min) {
-                elFrameWidth.value = min.toString();
-                return;
-            }
-
-            if (value > max) {
-                elFrameWidth.value = max.toString();
-                return;
-            }
-
-            this._frameWidth = value;
-        }
-
-        if (elFrameHeight) {
-            const value = parseInt(elFrameHeight.value);
-            const min = parseInt(elFrameHeight.min);
-            const max = parseInt(elFrameHeight.max);
-
-            if (!elFrameHeight.value) {
-                return;
-            }
-
-            if (value < min) {
-                elFrameHeight.value = min.toString();
-                return;
-            }
-
-            if (value > max) {
-                elFrameHeight.value = max.toString();
-                return;
-            }
-
-            this._frameHeight = value;
-        }
+        localStorage.setItem("tile-scale", this._scale.toString());
     }
 
     private static async updateControls() {
@@ -235,29 +156,21 @@ export class Game {
         this._cursorY = Cursor.y;
 
         if (Cursor.wheelY > 0 && this._scale > 1) {
-            const elScale = document.querySelector("#input-scale") as HTMLInputElement;
+            let value = await this.getNumberValue("scale", 1);
+            value--;
 
-            if (elScale) {
-                let value = parseInt(elScale.value);
-                value--;
-
-                elScale.value = value.toString();
-            }
+            await this.setNumberValue("scale", value);
         }
 
         if (Cursor.wheelY < 0 && this._scale < 10) {
-            const elScale = document.querySelector("#input-scale") as HTMLInputElement;
+            let value = await this.getNumberValue("scale", 1);
+            value++;
 
-            if (elScale) {
-                let value = parseInt(elScale.value);
-                value++;
-
-                elScale.value = value.toString();
-            }
+            await this.setNumberValue("scale", value);
         }
 
         if (Cursor.isButtonPressed(0) || Keyboard.keyPressed(Keys.Escape)) {
-            hideAllPanels();
+            await this.hideAllPanels();
         }
 
         if (Cursor.isButtonDown(1)) {
@@ -358,9 +271,9 @@ export class Game {
         }
 
         const pos = new Vector2(0, 0);
-        const scale = new Vector2(this._scale, this._scale);
+        const scale = new Vector2(1, 1);
         const origin = new Vector2(0, 0);
-        const color = new Color(255, 0, 255);
+        const color = new Color(31, 163, 81);
 
         const x = this._tileX * this._frameWidth * this._scale - this._viewX;
         const y = this._tileY * this._frameHeight * this._scale - this._viewY;
@@ -371,30 +284,30 @@ export class Game {
         pos.x = x;
         pos.y = y;
         scale.x = width;
-        scale.y = this._scale;
+        scale.y = 2;
 
         Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
 
         // Draw right line
-        pos.x = x + width - this._scale;
+        pos.x = x + width - 2;
         pos.y = y;
-        scale.x = this._scale;
+        scale.x = 2;
         scale.y = height;
 
         Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
 
         // Draw bottom line
         pos.x = x;
-        pos.y = y + height - this._scale;
+        pos.y = y + height - 2;
         scale.x = width;
-        scale.y = this._scale;
+        scale.y = 2;
 
         Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
 
         // Draw left line
         pos.x = x;
         pos.y = y;
-        scale.x = this._scale;
+        scale.x = 2;
         scale.y = height;
 
         Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
@@ -411,6 +324,10 @@ export class Game {
     private static async load() {
         const url = localStorage.getItem("tile-url");
         const scale = localStorage.getItem("tile-scale");
+        const frameWidth = localStorage.getItem("tile-frame-width");
+        const frameHeight = localStorage.getItem("tile-frame-height");
+        const padding = localStorage.getItem("tile-padding");
+        const spacing = localStorage.getItem("tile-spacing");
 
         if (url) {
             const img = new Image();
@@ -423,12 +340,124 @@ export class Game {
         }
 
         if (scale) {
-            const elScale = document.querySelector("#input-scale") as HTMLInputElement;
-
-            if (elScale) {
-                elScale.value = scale;
-            }
+            await this.setNumberValue("scale", parseInt(scale));
         }
+
+        if (frameWidth) {
+            await this.setNumberValue("frame-width", parseInt(frameWidth));
+        }
+
+        if (frameHeight) {
+            await this.setNumberValue("frame-height", parseInt(frameHeight));
+        }
+
+        if (padding) {
+            await this.setNumberValue("padding", parseInt(padding));
+        }
+
+        if (spacing) {
+            await this.setNumberValue("spacing", parseInt(spacing));
+        }
+    }
+
+    /* DOM FUNCTIONS */
+    private static async togglePanel(id: string) {
+        const panels = document.getElementsByClassName("panel") as HTMLCollectionOf<HTMLDivElement>;
+
+        for (let panel of panels) {
+            if (panel.id === id) {
+                continue;
+            }
+
+            panel.style.display = "none";
+        }
+
+        const el = document.getElementById(id);
+
+        if (!el) {
+            return;
+        }
+
+        if (el.style.display === "flex") {
+            el.style.display = "none";
+        } else {
+            el.style.display = "flex";
+        }
+    }
+
+    private static async hideAllPanels() {
+        const panels = document.getElementsByClassName("panel") as HTMLCollectionOf<HTMLDivElement>;
+
+        for (let panel of panels) {
+            panel.style.display = "none";
+        }
+    }
+
+    private static async hidePanel(id: string) {
+        const panel = document.getElementById(id);
+
+        if (panel) {
+            panel.style.display = "none";
+        }
+    }
+
+    private static async showPanel(id: string) {
+        const panel = document.getElementById(id);
+
+        if (panel) {
+            panel.style.display = "flex";
+        }
+    }
+
+    private static async setLabelValue(id: string, value: any, suffix: string = "") {
+        const el = document.getElementById(`label-${id}`) as HTMLSpanElement;
+
+        if (!el) {
+            return;
+        }
+
+        el.innerHTML = `${value}${suffix}`;
+    }
+
+    private static async setNumberValue(id: string, value: number) {
+        const el = document.getElementById(`input-${id}`) as HTMLInputElement;
+
+        if (!el) {
+            return;
+        }
+
+        const elMin = parseInt(el.min);
+        const elMax = parseInt(el.max);
+
+        if (value < elMin) {
+            el.value = elMin.toString();
+        } else if (value > elMax) {
+            el.value = elMax.toString();
+        } else {
+            el.value = value.toString();
+        }
+    }
+
+    private static async getNumberValue(id: string, dflt: number = 0) {
+        const el = document.getElementById(`input-${id}`) as HTMLInputElement;
+
+        if (!el) {
+            return dflt;
+        }
+
+        const elValue = parseInt(el.value);
+        const elMin = parseInt(el.min);
+        const elMax = parseInt(el.max);
+
+        if (elValue < elMin) {
+            return elMin;
+        }
+
+        if (elValue > elMax) {
+            return elMax;
+        }
+
+        return elValue;
     }
 
     /* EVENTS */

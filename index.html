@@ -8,6 +8,7 @@
     <meta name="keywords" content="tile,viewer,aquanore" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <link rel="icon" type="image/png" href="icon.png" />
     <link rel="stylesheet" type="text/css" href="css/vars.css" />
     <link rel="stylesheet" type="text/css" href="css/common.css" />
     <link rel="stylesheet" type="text/css" href="css/forms.css" />
@@ -16,11 +17,11 @@
 <body>
     <div class="container">
         <div class="nav">
-            <span class="link" onclick="togglePanel('load')">
+            <span class="link" id="link-load">
                 <i data-lucide="folder-open"></i>
             </span>
 
-            <span class="link" onclick="togglePanel('settings')">
+            <span class="link" id="link-settings">
                 <i data-lucide="settings"></i>
             </span>
         </div>
@@ -43,6 +44,16 @@
             <div class="row">
                 <label>Frame Height:</label>
                 <input type="number" min="1" max="9999" id="input-frame-height" value="16" />
+            </div>
+
+            <div class="row">
+                <label>Padding:</label>
+                <input type="number" min="0" max="9999" id="input-padding" value="0" />
+            </div>
+
+            <div class="row">
+                <label>Spacing:</label>
+                <input type="number" min="0" max="9999" id="input-spacing" value="0" />
             </div>
         </div>
 
@@ -122,6 +133,5 @@
 
     <script src="./src/app.ts" type="module"></script>
     <script src="./src/lucide.js" type="module"></script>
-    <script src="./src/ui.js"></script>
 </body>
 </head>
