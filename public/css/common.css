@@ -122,6 +122,26 @@ hr {
     color: #fff;
 }
 
+.nav .grow {
+    flex-grow: 1;
+}
+
+.nav .logo {
+    width: 32px;
+    height: 32px;
+    margin: 12px;
+}
+
+.nav .logo:hover {
+    filter: brightness(120%);
+    cursor: pointer;
+}
+
+.nav hr {
+    margin: 0 6px;
+    border-top: solid 2px #222;
+}
+
 .panel {
     position: absolute;
     top: 0px;

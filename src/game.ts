@@ -84,6 +84,7 @@ export class Game {
         const btnLoadDisk = document.querySelector("#btn-load-disk") as HTMLButtonElement;
         const linkLoad = document.querySelector("#link-load") as HTMLSpanElement;
         const linkSettings = document.querySelector("#link-settings") as HTMLSpanElement;
+        const logo = document.querySelector(".nav .logo") as HTMLImageElement;
 
         btnLoadDisk.addEventListener("click", async () => {
             await this.onLoadDisk();
@@ -95,6 +96,10 @@ export class Game {
 
         linkSettings.addEventListener("click", async () => {
             await this.togglePanel("settings");
+        });
+
+        logo.addEventListener("click", async () => {
+            await this.togglePanel("about");
         });
     }
 
