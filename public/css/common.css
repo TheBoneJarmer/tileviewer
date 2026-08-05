@@ -66,9 +66,14 @@ p {
 }
 
 hr {
-    margin: 0 0 16px 0;
+    margin: 8px 0;
     border: none;
-    border-top: solid 2px #eee;
+    border-top: solid 2px var(--green);
+}
+
+.icon {
+    width: 32px;
+    height: 32px;
 }
 
 .row {
@@ -103,6 +108,11 @@ hr {
     background-color: #111;
 }
 
+.nav hr {
+    margin: 0 6px;
+    border-top: solid 2px #222;
+}
+
 .nav .link {
     padding: 16px;
 }
@@ -122,10 +132,6 @@ hr {
     color: #fff;
 }
 
-.nav .grow {
-    flex-grow: 1;
-}
-
 .nav .logo {
     width: 32px;
     height: 32px;
@@ -137,9 +143,8 @@ hr {
     cursor: pointer;
 }
 
-.nav hr {
-    margin: 0 6px;
-    border-top: solid 2px #222;
+.grow {
+    flex-grow: 1;
 }
 
 .panel {
