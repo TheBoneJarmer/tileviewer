@@ -21,7 +21,7 @@ button:active {
 
 label {
     display: flex;
-    flex-basis: 50%;
+    flex-basis: 100%;
 }
 
 input {
@@ -35,4 +35,8 @@ input {
 
 input:focus {
     outline: solid 2px var(--dark-green);
+}
+
+@media (max-width: 786px) {
+    
 }
