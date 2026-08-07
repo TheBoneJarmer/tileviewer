@@ -21,7 +21,7 @@ button:active {
 
 label {
     display: flex;
-    flex-basis: 50%;
+    flex-basis: 100%;
 }
 
 input {
@@ -41,4 +41,8 @@ input:focus {
 input[type="color"] {
     padding: 0;
     cursor: pointer;
+}
+
+@media (max-width: 786px) {
+    
 }
