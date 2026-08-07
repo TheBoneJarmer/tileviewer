@@ -26,7 +26,8 @@ label {
 
 input {
     width: 100%;
-    padding: 4px;
+    height: 38px;
+    padding: 0 4px;
     border: solid 1px var(--green);
     background-color: #eee;
     border-radius: 8px;
@@ -35,4 +36,9 @@ input {
 
 input:focus {
     outline: solid 2px var(--dark-green);
+}
+
+input[type="color"] {
+    padding: 0;
+    cursor: pointer;
 }

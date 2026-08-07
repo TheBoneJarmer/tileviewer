@@ -17,6 +17,8 @@ export class Game {
     private static _scale: number;
     private static _spacing: number;
     private static _padding: number;
+    private static _gridColor: Color;
+    private static _cursorColor: Color;
 
     private static _viewX: number;
     private static _viewY: number;
@@ -139,8 +141,10 @@ export class Game {
         await this.setLabelValue("height", this._texTileset.height, "px");
         await this.setLabelValue("frames-hor", Math.round(this._texTileset.width / this._frameWidth));
         await this.setLabelValue("frames-vert", Math.round(this._texTileset.height / this._frameHeight));
-        await this.setLabelValue("tile-x", this._tileX);
-        await this.setLabelValue("tile-y", this._tileY);
+        await this.setLabelValue("tile-hor", this._tileX);
+        await this.setLabelValue("tile-vert", this._tileY);
+        await this.setLabelValue("tile-x", this._tileX * this._frameWidth);
+        await this.setLabelValue("tile-y", this._tileY * this._frameHeight);
         await this.setLabelValue("tile-index", maxHor * this._tileY + this._tileX);
     }
 
@@ -150,8 +154,16 @@ export class Game {
         this._frameHeight = await this.getNumberValue("frame-height", 16);
         this._padding = await this.getNumberValue("padding", 0);
         this._spacing = await this.getNumberValue("spacing", 0);
+        this._gridColor = await this.getColorValue("grid-color");
+        this._cursorColor = await this.getColorValue("cursor-color");
 
         localStorage.setItem("tile-scale", this._scale.toString());
+        localStorage.setItem("tile-frame-width", this._frameWidth.toString());
+        localStorage.setItem("tile-frame-height", this._frameHeight.toString());
+        localStorage.setItem("tile-padding", this._padding.toString());
+        localStorage.setItem("tile-spacing", this._spacing.toString());
+        localStorage.setItem("tile-grid-color", this.toHex(this._gridColor));
+        localStorage.setItem("tile-cursor-color", this.toHex(this._cursorColor));
     }
 
     private static async updateControls() {
@@ -242,8 +254,6 @@ export class Game {
         }
 
         const origin = new Vector2(0, 0);
-        const color = new Color(0, 0, 0, 255);
-
         const hor = this._frameWidth;
         const vert = this._frameHeight;
         const maxHor = this._texTileset.width / hor + 1;
@@ -256,7 +266,7 @@ export class Game {
             const scale = new Vector2(1, 1);
             scale.y = this._texTileset.height * this._scale;
 
-            Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
+            Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, this._gridColor);
         }
 
         for (let y = 0; y < maxVert; y++) {
@@ -266,7 +276,7 @@ export class Game {
             const scale = new Vector2(1, 1);
             scale.x = this._texTileset.width * this._scale;
 
-            Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
+            Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, this._gridColor);
         }
     }
 
@@ -278,7 +288,6 @@ export class Game {
         const pos = new Vector2(0, 0);
         const scale = new Vector2(1, 1);
         const origin = new Vector2(0, 0);
-        const color = new Color(31, 163, 81);
 
         const x = this._tileX * this._frameWidth * this._scale - this._viewX;
         const y = this._tileY * this._frameHeight * this._scale - this._viewY;
@@ -291,7 +300,7 @@ export class Game {
         scale.x = width;
         scale.y = 2;
 
-        Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
+        Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, this._cursorColor);
 
         // Draw right line
         pos.x = x + width - 2;
@@ -299,7 +308,7 @@ export class Game {
         scale.x = 2;
         scale.y = height;
 
-        Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
+        Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, this._cursorColor);
 
         // Draw bottom line
         pos.x = x;
@@ -307,7 +316,7 @@ export class Game {
         scale.x = width;
         scale.y = 2;
 
-        Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
+        Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, this._cursorColor);
 
         // Draw left line
         pos.x = x;
@@ -315,7 +324,7 @@ export class Game {
         scale.x = 2;
         scale.y = height;
 
-        Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, color);
+        Renderer.drawPolygon(this._polyPixel, pos, scale, origin, 0, this._cursorColor);
     }
 
     public static async resize() {
@@ -333,6 +342,8 @@ export class Game {
         const frameHeight = localStorage.getItem("tile-frame-height");
         const padding = localStorage.getItem("tile-padding");
         const spacing = localStorage.getItem("tile-spacing");
+        const gridColor = localStorage.getItem("tile-grid-color");
+        const cursorColor = localStorage.getItem("tile-cursor-color");
 
         if (url) {
             const img = new Image();
@@ -362,6 +373,14 @@ export class Game {
 
         if (spacing) {
             await this.setNumberValue("spacing", parseInt(spacing));
+        }
+
+        if (gridColor) {
+            await this.setValue("grid-color", gridColor);
+        }
+
+        if (cursorColor) {
+            await this.setValue("cursor-color", cursorColor);
         }
     }
 
@@ -424,6 +443,16 @@ export class Game {
         el.innerHTML = `${value}${suffix}`;
     }
 
+    private static async setValue(id: string, value: string) {
+        const el = document.getElementById(`input-${id}`) as HTMLInputElement;
+
+        if (!el) {
+            return;
+        }
+
+        el.value = value;
+    }
+
     private static async setNumberValue(id: string, value: number) {
         const el = document.getElementById(`input-${id}`) as HTMLInputElement;
 
@@ -463,6 +492,30 @@ export class Game {
         }
 
         return elValue;
+    }
+
+    private static async getColorValue(id: string) {
+        const el = document.getElementById(`input-${id}`) as HTMLInputElement;
+
+        if (!el) {
+            return new Color(0, 0, 0);
+        }
+
+        const hex = el.value as string;
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+
+        return new Color(r,g,b);
+    }
+
+    /* HELPER FUNCTIONS */
+    private static toHex(color: Color) {
+        const r = color.r.toString(16).padStart(2, "0");
+        const g = color.g.toString(16).padStart(2, "0");
+        const b = color.b.toString(16).padStart(2, "0");
+
+        return `#${r}${g}${b}`;
     }
 
     /* EVENTS */
